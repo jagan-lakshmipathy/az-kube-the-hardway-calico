@@ -38,16 +38,6 @@ echo "00-Installed OS dependencies."
   tar -xvf containerd-$VERSION-linux-amd64.tar.gz  -C containerd
 }
 
-chmod +x runsc
-mv runsc /usr/local/bin/
-
-
-install -m 755 runc.amd64 /usr/local/sbin/runc
-
-sudo tar -xzvf cni-plugins-linux-amd64-v1.3.0.tgz -C /opt/cni/bin/
-
-
-
 wget -q --show-progress --https-only --timestamping \
   https://github.com/kubernetes-sigs/cri-tools/releases/download/v1.26.1/crictl-v1.26.1-linux-amd64.tar.gz \
   https://storage.googleapis.com/gvisor/releases/nightly/latest/runsc \

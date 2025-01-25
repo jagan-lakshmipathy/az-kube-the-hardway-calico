@@ -33,7 +33,7 @@ echo "02-Fetched 1.29.12 kubernetes client, server, and node binaries."
   sudo rm -rf ./kubernetes
   sudo rm kubernetes-client-linux-amd64.tar.gz
 
-  chmod +x /usr/local/bin/*
+  sudo chmod +x /usr/local/bin/*
 }
 echo "03-Installed kube-apiserver, kube-controller-manager, kube-scheduler, and kubectl."
 
@@ -132,7 +132,7 @@ echo "07-Created the kube-controller-manager.service systemd unit file."
 sudo mv kube-scheduler.kubeconfig /var/lib/kubernetes/
 
 cat <<EOF | sudo tee /etc/kubernetes/config/kube-scheduler.yaml
-apiVersion: kubescheduler.config.k8s.io/v1beta3
+apiVersion: kubescheduler.config.k8s.io/v1
 kind: KubeSchedulerConfiguration
 clientConnection:
   kubeconfig: "/var/lib/kubernetes/kube-scheduler.kubeconfig"
