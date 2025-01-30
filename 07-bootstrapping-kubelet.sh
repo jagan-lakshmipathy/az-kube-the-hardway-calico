@@ -11,11 +11,13 @@ echo "00-Installed OS dependencies."
   VERSION="1.29.0"
   wget -q --show-progress --https-only --timestamping \
     https://github.com/kubernetes-sigs/cri-tools/releases/download/v$VERSION/crictl-v$VERSION-linux-amd64.tar.gz
-
+  sudo tar -xvf crictl-v$VERSION-linux-amd64.tar.gz -C /usr/local/bin/
+  rm crictl-v$VERSION-linux-amd64.tar.gz
 }
 
 {
   VERSION="latest"
+
   wget -q --show-progress --https-only --timestamping \
     https://storage.googleapis.com/gvisor/releases/release/$VERSION/runsc
 }
@@ -23,30 +25,51 @@ echo "00-Installed OS dependencies."
 {
   VERSION="1.1.9"
   wget -q --show-progress --https-only --timestamping \
-    https://github.com/opencontainers/runc/releases/download/$VERSION/runc.amd64
+    https://github.com/opencontainers/runc/releases/download/v$VERSION/runc.amd64
+  sudo mv runc.amd64 /usr/local/bin/runc
 }
 
 {
   VERSION="1.3.0"
   wget -q --show-progress --https-only --timestamping \
     https://github.com/containernetworking/plugins/releases/download/v$VERSION/cni-plugins-linux-amd64-v$VERSION.tgz
+  sudo tar -xvf cni-plugins-linux-amd64-v$VERSION.tgz -C /opt/cni/bin/
+  rm cni-plugins-linux-amd64-v$VERSION.tgz
 }
 
 {
   VERSION="1.7.5"
+  mkdir containerd
+  
   wget https://github.com/containerd/containerd/releases/download/v$VERSION/containerd-$VERSION-linux-amd64.tar.gz
-  tar -xvf containerd-$VERSION-linux-amd64.tar.gz  -C containerd
+  sudo tar -xvf containerd-$VERSION-linux-amd64.tar.gz  -C containerd
+  sudo mv containerd/bin/* /bin/
+  rm containerd-$VERSION-linux-amd64.tar.gz
+  rm -rf containerd
 }
 
+
+
+VERSION="1.29.12"
 wget -q --show-progress --https-only --timestamping \
-  https://github.com/kubernetes-sigs/cri-tools/releases/download/v1.26.1/crictl-v1.26.1-linux-amd64.tar.gz \
-  https://storage.googleapis.com/gvisor/releases/nightly/latest/runsc \
-  https://github.com/opencontainers/runc/releases/download/v1.1.5/runc.amd64 \
-  https://github.com/containernetworking/plugins/releases/download/v1.2.0/cni-plugins-linux-amd64-v1.2.0.tgz \
-  https://github.com/containerd/containerd/releases/download/v1.7.0/containerd-1.7.0-linux-amd64.tar.gz \
-  https://storage.googleapis.com/kubernetes-release/release/v1.26.3/bin/linux/amd64/kubectl \
-  https://storage.googleapis.com/kubernetes-release/release/v1.26.3/bin/linux/amd64/kube-proxy \
-  https://storage.googleapis.com/kubernetes-release/release/v1.26.3/bin/linux/amd64/kubelet
+  https://dl.k8s.io/v$VERSION/kubernetes-client-linux-amd64.tar.gz \
+  https://dl.k8s.io/v$VERSION/kubernetes-node-linux-amd64.tar.gz
+
+echo "02-Fetched 1.29.12 kubernetes client, server, and node binaries."
+
+{
+  sudo tar -xvf kubernetes-node-linux-amd64.tar.gz -C .
+  sudo mv ./kubernetes/node/bin/* /usr/local/bin/
+  sudo rm -rf ./kubernetes
+  sudo rm kubernetes-node-linux-amd64.tar.gz 
+
+  sudo tar -xvf kubernetes-client-linux-amd64.tar.gz -C .
+  sudo mv ./kubernetes/client/bin/* /usr/local/bin/
+  sudo rm -rf ./kubernetes
+  sudo rm kubernetes-client-linux-amd64.tar.gz
+
+  sudo chmod +x /usr/local/bin/*
+}
 
 echo "1-Fetched worker binaries crictl, runsc, runc, cni, containerd, kubectl, kube-proxy, and kubelet."
 
@@ -55,21 +78,14 @@ sudo mkdir -p \
   /opt/cni/bin \
   /var/lib/kubelet \
   /var/lib/kube-proxy \
-  /var/lib/kubernetes \
-  /var/run/kubernetes
+  /var/lib/kubernetes 
 
 echo "02-Made directories for each worker binary."
 
-{
-  mkdir containerd
-  sudo mv runc.amd64 runc
-  chmod +x kubectl kube-proxy kubelet runc runsc
-  sudo mv kubectl kube-proxy kubelet runc runsc /usr/local/bin/
-  sudo tar -xvf crictl-v1.26.1-linux-amd64.tar.gz -C /usr/local/bin/
-  sudo tar -xvf cni-plugins-linux-amd64-v1.2.0.tgz -C /opt/cni/bin/
-  sudo tar -xvf containerd-1.7.0-linux-amd64.tar.gz -C containerd
-  sudo mv containerd/bin/* /bin/
-}
+#{
+#  chmod +x kubectl kube-proxy kubelet runc runsc
+#  sudo mv kubectl kube-proxy kubelet runc runsc /usr/local/bin/
+#}
 echo "03-Installed worker binaries."
 
 POD_CIDR="$(echo $(curl --silent -H Metadata:true "http://169.254.169.254/metadata/instance/compute/tags?api-version=2017-08-01&format=text" | sed 's/\;/\n/g' | grep pod-cidr) | cut -d : -f2)"
@@ -157,7 +173,7 @@ echo "05-Configured Containerd."
 {
   sudo mv ${HOSTNAME}-key.pem ${HOSTNAME}.pem /var/lib/kubelet/
   sudo mv ${HOSTNAME}.kubeconfig /var/lib/kubelet/kubeconfig
-  sudo mv ca.pem kubernetes-key.pem kubernetes.pem /var/lib/kubernetes/
+  sudo mv ca.pem /var/lib/kubernetes/
   sudo mv calico* /opt/cni/bin/
   sudo mv 10-calico.conf /etc/cni/net.d/
 }

@@ -1,7 +1,7 @@
 
 curl -L  https://github.com/projectcalico/calico/releases/download/v3.29.0/calico-ipam-linux-amd64 -o ./calico-ipam
-curl -L  https://github.com/projectcalico/calico/releases/download/v3.29.0/calico-cni-linux-amd64-o ./calico
-curl -L  https://github.com/projectcalico/calico/releases/download/v3.29.0/calicoctl-linux-amd64 -O ./calicoctl
+curl -L  https://github.com/projectcalico/calico/releases/download/v3.29.0/calico-cni-linux-amd64 -o ./calico
+curl -L  https://github.com/projectcalico/calico/releases/download/v3.29.0/calicoctl-linux-amd64 -o ./calicoctl
 chmod +x /usr/local/bin/calicoctl
 
 
@@ -44,6 +44,6 @@ for instance in worker-0 worker-1; do
   PUBLIC_IP_ADDRESS=$(az network public-ip show -g kubernetes \
     -n ${instance}-pip --query "ipAddress" -o tsv)
 
-  scp -o StrictHostKeyChecking=no calico-ipam calico calicoctl 10-calico.conf ${instance}.pem kuberoot@${PUBLIC_IP_ADDRESS}:~/
+  scp -o StrictHostKeyChecking=no calico-ipam calico calicoctl 10-calico.conf kube-proxy.kubeconfig ca.pem ${instance}.kubeconfig ${instance}.pem ${instance}-key.pem kuberoot@${PUBLIC_IP_ADDRESS}:~/
 done
 echo 'Copied Calico Resources to Worker Nodes.'
