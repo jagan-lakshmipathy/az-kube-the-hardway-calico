@@ -1,7 +1,8 @@
 #!/bin/bash
 
-PUBLIC_IP_ADDRESS=$(az network public-ip show -g kubernetes \
-  -n ${CONTROLLER}-pip --query "ipAddress" -otsv)
+./env-controller.sh
+echo "00 - Instantiated env-controller.sh"
+
 
 ssh kuberoot@${PUBLIC_IP_ADDRESS}
 #===================================
@@ -47,8 +48,6 @@ echo "03-Installed kube-apiserver, kube-controller-manager, kube-scheduler, and 
 echo "04-Moved configuration files (ca, ca-key, etc.) to /var/lib/kubernetes/."
 
 INTERNAL_IP=$(ip addr show eth0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}')
-KUBERNETES_PUBLIC_ADDRESS=$(az network public-ip show -g kubernetes \
-  -n kubernetes-pip --query "ipAddress" -o tsv)
 KUBERNETES_HOSTNAMES=kubernetes,kubernetes.default,kubernetes.default.svc,kubernetes.default.svc.cluster,kubernetes.svc.cluster.local
 echo "05-Internal IP Address for the compute instance: "$INTERNAL_IP
 

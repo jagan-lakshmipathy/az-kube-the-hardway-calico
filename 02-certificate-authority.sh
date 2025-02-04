@@ -291,11 +291,14 @@ for instance in worker-0 worker-1; do
 done
 echo 'Copied client certificates to workers.'
 
+./env-controller-gen.sh
+echo 'generating env-controller script - environment variables needed for CP bootstrapping.'
+
 for instance in controller-0 controller-1 controller-2; do
   PUBLIC_IP_ADDRESS=$(az network public-ip show -g kubernetes \
     -n ${instance}-pip --query "ipAddress" -o tsv)
 
-  scp -o StrictHostKeyChecking=no ca.pem ca-key.pem kubernetes-key.pem kubernetes.pem \
+  scp -o StrictHostKeyChecking=no env-controller.sh ca.pem ca-key.pem kubernetes-key.pem kubernetes.pem \
     service-account-key.pem service-account.pem kuberoot@${PUBLIC_IP_ADDRESS}:~/
 done
 
