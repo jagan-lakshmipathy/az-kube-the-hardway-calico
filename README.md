@@ -33,7 +33,7 @@ In this step, we will remote copy the 05-bootstrapping-etcd.sh to each controlle
 
 To verify etcd cluster health, run the following command. This will show 3 instances of etcd in the list.
 ```
-    ETCDCTL_API=3 etcdctl --cacert=/etc/etcd/ca.pem \
+    sudo ETCDCTL_API=3 etcdctl --cacert=/etc/etcd/ca.pem \
       --cert=/etc/etcd/kubernetes.pem --key=/etc/etcd/kubernetes-key.pem \
       --endpoints=https://10.240.0.10:2379,https://10.240.0.11:2379,https://10.240.0.12:2379 \
       member list
@@ -94,7 +94,7 @@ To verify kublet API from the worker nodes.
 Finally, check the network connectivity to API servers using the following:
 ```
     nc -zv 10.240.0.12  6443
-    telnet 10.240.0.12  6443 --cert /var/lib/kubernetes/ca.pem https://127.0.0.1:10250/healthz
+    telnet 10.240.0.12  6443
 ```
 #### 2.9 Running Calico
  Ensure Calico binaries are in the /opt/cni/bin directory. The Calico binaries are calico and calico-ipam. Make sure that the calico and calico-ipam binaries are executable. Confirm that the etcd instance is accessible from the nodes where Calico is running. You can do this by testing the connection to the etcd endpoints you’ve provided in your 10-calico.yaml. The following is the command:
@@ -111,7 +111,25 @@ Finally, run the following command to run the calico.
     kubectl apply -f calico-node-daemonset.yaml  --kubeconfig=kubernetes-the-hard-way.kubeconfig
     kubectl apply -f calico-kube-controllers.yaml  --kubeconfig=kubernetes-the-hard-way.kubeconfig
 ```
-#### 2.10 Create Kubernetes Configurations for Kuberenetes API
+#### 2.10 Debug and verify the CNI Network
+After applying the above configurations, you can check the logs of the Calico pods to ensure they are running properly by issuing the folloiwng commands locally.
+```
+    kubectl logs -n kube-system -l k8s-app=calico-node  --kubeconfig=kubernetes-the-hard-way.kubeconfig
+    kubectl logs -n kube-system -l k8s-app=calico-kube-controllers  --kubeconfig=kubernetes-the-hard-way.kubeconfig
+```
+you can verify the pod status from you local host. you can also check 
+```
+    kubectl get pods -n kube-system -l k8s-app=calico-node  --kubeconfig=kubernetes-the-hard-way.kubeconfig
+    kubectl get pods -n kube-system -l k8s-app=calico-kube-controllers  --kubeconfig=kubernetes-the-hard-way.kubeconfig
+```
+If we’re encountering issues where Calico cannot communicate with the Kubernetes API server, ensure that your etcd configuration is correct and the control plane API server is reachable. We can test this using the following curl command from the Calico node to check the health endpoint of the Kubernetes API server:
+```
+    curl --key /var/lib/kubernetes/kubernetes-key.pem  --cert /var/lib/kubernetes/kubernetes.pem --cacert /var/lib/kubernetes/ca.pem     https://10.240.0.11:6443/healthz
+```
+Finally, verify that the Calico network is working by checking if pods can communicate across nodes by issuing the common from your local host:
+```
+    kubectl run -i --tty --rm debug --image=busybox --restart=Never --namespace=default --kubeconfig=kubernetes-the-hard-way.kubeconfig -- /bin/sh
+```
 
 #### 2.11 Create Kubernetes Configurations for Kuberenetes API
 #### 2.12 Verify Nodes & Components

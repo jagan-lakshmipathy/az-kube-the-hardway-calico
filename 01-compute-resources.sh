@@ -83,6 +83,20 @@ UBUNTULTS="Canonical:UbuntuServer:18.04-LTS:latest"
 
 az vm availability-set create -g $RG_NAME -n controller-as
 
+# Wait for Availability Set to be recognized (retry loop)
+echo "Waiting for Availability Set to be ready..."
+for i in {1..10}; do
+    az vm availability-set show -g $RG_NAME -n controller-as --query id -o tsv && break
+    echo "Retry $i: Availability Set not found yet, waiting..."
+    sleep 5
+done
+
+# Final check to avoid proceeding if it still doesn't exist
+if ! az vm availability-set show -g $RG_NAME -n controller-as --query id -o tsv; then
+    echo "ERROR: Availability Set 'controller-as' not found after multiple retries!"
+    exit 1
+fi
+
 for i in 0 1 2; do
     echo "[Controller ${i}] Creating public IP..."
     az network public-ip create --sku Standard -z 1 -n controller-${i}-pip -g kubernetes > /dev/null
@@ -109,12 +123,29 @@ for i in 0 1 2; do
         --availability-set controller-as \
         --admin-username 'kuberoot' \
         --generate-ssh-keys > /dev/null
+
+    echo "Sleeping for 10 seconds before creating the next VM..."
+    sleep 10  # Pause to avoid hitting Azure rate limits    
 done
 
 echo '8-Created 3 VMs with NIC for controllers'
 
 
 az vm availability-set create -g $RG_NAME -n worker-as
+
+# Wait for Availability Set to be recognized (retry loop)
+echo "Waiting for Availability Set to be ready..."
+for i in {1..10}; do
+    az vm availability-set show -g $RG_NAME -n worker-as --query id -o tsv && break
+    echo "Retry $i: Availability Set not found yet, waiting..."
+    sleep 5
+done
+
+# Final check to avoid proceeding if it still doesn't exist
+if ! az vm availability-set show -g $RG_NAME -n worker-as --query id -o tsv; then
+    echo "ERROR: Availability Set 'controller-as' not found after multiple retries!"
+    exit 1
+fi
 
 for i in 0 1; do
     echo "[Worker ${i}] Creating public IP..."
@@ -141,6 +172,9 @@ for i in 0 1; do
         --availability-set worker-as \
         --generate-ssh-keys \
         --admin-username 'kuberoot' > /dev/null
+    
+    echo "Sleeping for 10 seconds before creating the next VM..."
+    sleep 10  # Pause to avoid hitting Azure rate limits
 done
 
 echo '9-Created 2 VMs with NIC for workers'

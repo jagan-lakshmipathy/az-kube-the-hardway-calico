@@ -1,0 +1,89 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: calico-node
+  namespace: kube-system
+  labels:
+    k8s-app: calico-node
+spec:
+  selector:
+    matchLabels:
+      k8s-app: calico-node
+  template:
+    metadata:
+      labels:
+        k8s-app: calico-node
+    spec:
+      hostNetwork: true
+      serviceAccountName: calico-node
+      tolerations:
+        - key: node-role.kubernetes.io/master
+          effect: NoSchedule
+        - key: node-role.kubernetes.io/control-plane
+          effect: NoSchedule
+      containers:
+        - name: calico-node
+          image: calico/node:v3.20.6
+          env:
+            - name: DATASTORE_TYPE
+              value: "etcdv3"
+            - name: ETCD_ENDPOINTS
+              value: "https://10.240.0.10:2379,https://10.240.0.11:2379,https://10.240.0.12:2379"
+            - name: ETCD_KEY_FILE
+              value: "/var/lib/kubernetes/kubernetes-key.pem"
+            - name: ETCD_CERT_FILE
+              value: "/var/lib/kubernetes/kubernetes.pem"
+            - name: ETCD_CA_CERT_FILE
+              value: "/var/lib/kubernetes/ca.pem"
+            - name: FELIX_LOGSEVERITYSCREEN
+              value: "info"
+            - name: IP_AUTODETECTION_METHOD
+              value: "can-reach=8.8.8.8"
+            - name: CALICO_NETWORKING_BACKEND
+              value: "none"
+            - name: CALICO_K8S_CLUSTER_NAME
+              value: ""  # Disable Kubernetes interaction entirely
+            - name: WAIT_FOR_DATASTORE
+              value: "true"
+            - name: K8S_API_SERVER
+              value: ""  # Ensure no Kubernetes API server is set
+            - name: FELIX_K8S_API_SERVERS
+              value: ""
+            - name: K8S_SERVICE_HOST
+              value: ""  # No Kubernetes service host
+            - name: K8S_SERVICE_PORT
+              value: ""  # No Kubernetes service port
+            - name: CALICO_DISABLE_K8S
+              value: "true"  # Explicitly disable K8s interaction
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: cni-bin
+              mountPath: /opt/cni/bin
+              readOnly: true
+            - name: cni-net
+              mountPath: /etc/cni/net.d
+              readOnly: true
+            - mountPath: /var/lib/kubernetes
+              name: etcd-certs
+              readOnly: true
+            - mountPath: /lib/modules
+              name: lib-modules
+              readOnly: true
+      volumes:
+        - name: etcd-certs
+          hostPath:
+            path: /var/lib/kubernetes
+            type: DirectoryOrCreate
+        - name: lib-modules
+          hostPath:
+            path: /lib/modules
+            type: DirectoryOrCreate
+        - name: cni-bin
+          hostPath:
+            path: /opt/cni/bin
+            type: DirectoryOrCreate
+        - name: cni-net
+          hostPath:
+            path: /etc/cni/net.d
+            type: DirectoryOrCreate

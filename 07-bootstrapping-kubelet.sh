@@ -173,7 +173,8 @@ echo "05-Configured Containerd."
 {
   sudo mv ${HOSTNAME}-key.pem ${HOSTNAME}.pem /var/lib/kubelet/
   sudo mv ${HOSTNAME}.kubeconfig /var/lib/kubelet/kubeconfig
-  sudo mv ca.pem /var/lib/kubernetes/
+  sudo chmod 744 kubernetes*.pem
+  sudo mv ca.pem kubernetes.pem kubernetes-key.pem /var/lib/kubernetes/
   sudo mv calico* /opt/cni/bin/
   sudo mv 10-calico.conf /etc/cni/net.d/
 }

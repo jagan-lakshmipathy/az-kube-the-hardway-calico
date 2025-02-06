@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: calico-kube-controllers
+  namespace: kube-system
+  labels:
+    k8s-app: calico-kube-controllers
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: calico-kube-controllers
+  template:
+    metadata:
+      labels:
+        k8s-app: calico-kube-controllers
+    spec:
+      serviceAccountName: calico-kube-controllers
+      containers:
+        - name: calico-kube-controllers
+          image: calico/kube-controllers:v3.20.6
+          env:
+            - name: DATASTORE_TYPE
+              value: "etcdv3"
+            - name: ETCD_ENDPOINTS
+              value: "https://10.240.0.10:2379,https://10.240.0.11:2379,https://10.240.0.12:2379"
+            - name: ETCD_KEY_FILE
+              value: "/var/lib/kubernetes/kubernetes-key.pem"
+            - name: ETCD_CERT_FILE
+              value: "/var/lib/kubernetes/kubernetes.pem"
+            - name: ETCD_CA_CERT_FILE
+              value: "/var/lib/kubernetes/ca.pem"
+            - name: ENABLED_CONTROLLERS
+              value: "node,policy,workloadendpoint"
+          volumeMounts:
+            - name: cni-bin
+              mountPath: /opt/cni/bin
+              readOnly: true
+            - name: cni-net
+              mountPath: /etc/cni/net.d
+              readOnly: true
+            - mountPath: /var/lib/kubernetes
+              name: etcd-certs
+              readOnly: true
+      volumes:
+        - name: etcd-certs
+          hostPath:
+            path: /var/lib/kubernetes
+            type: DirectoryOrCreate
+        - name: cni-bin
+          hostPath:
+            path: /opt/cni/bin
+            type: DirectoryOrCreate
+        - name: cni-net
+          hostPath:
+            path: /etc/cni/net.d
+            type: DirectoryOrCreate
