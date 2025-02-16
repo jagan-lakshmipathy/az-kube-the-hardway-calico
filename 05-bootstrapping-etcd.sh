@@ -19,6 +19,7 @@ echo "02-Extracted and installed etcd and etcdctl"
   sudo mkdir -p /etc/etcd /var/lib/etcd
   sudo chmod 700 /var/lib/etcd
   sudo cp ca.pem kubernetes-key.pem kubernetes.pem /etc/etcd/
+  sudo chmod 744 /etc/etcd/*
 }
 echo "03-Configure the etcd Server."
 

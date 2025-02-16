@@ -57,6 +57,34 @@ az network nsg rule create -g $RG_NAME \
 
 echo '4-Created nsg rule kubernetes-allow-api'
 
+az network nsg rule create \
+  --resource-group kubernetes \
+  --nsg-name kubernetes-nsg \
+  --name AllowEtcdPeers \
+  --priority 1002 \
+  --direction Inbound \
+  --access Allow \
+  --protocol tcp \
+  --source-address-prefixes 10.240.0.0/24 \
+  --destination-address-prefixes 10.240.0.0/24 \
+  --destination-port-ranges 2379-2380
+
+echo '4.1-Created nsg rule AllowEtcdPeers'
+
+az network nsg rule create \
+  --resource-group kubernetes \
+  --nsg-name kubernetes-nsg \
+  --name AllowEtcdPeersOutbound \
+  --priority 1003 \
+  --direction Outbound \
+  --access Allow \
+  --protocol Tcp \
+  --source-address-prefixes 10.240.0.0/24 \
+  --destination-address-prefixes 10.240.0.0/24 \
+  --destination-port-ranges 2380
+
+echo '4.2-Created nsg rule AllowEtcdPeersOutbound'
+
 az network nsg rule list -g $RG_NAME --nsg-name kubernetes-nsg --query "[].{Name:name, \
   Direction:direction, Priority:priority, Port:destinationPortRange}" -o table
 

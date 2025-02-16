@@ -65,7 +65,8 @@ Now, run 06-setup-frontend-lb.sh and 06-verify-controller.sh locally in that ord
 
 Run the 08-configure-kubectl.sh locally. This will generate the kubernetes-the-hard-way.kubeconfig. From now on you will use this kubeconfig to connct to the cluster. Run the following commands locally to create the cluster roles and rolebindings for worker nodes to access.
 ```
-    kubectl apply -f node-cluster-roleb.yaml --kubeconfig=kubernetes-the-hard-way.kubeconfig
+    kubectl apply -f kube-apiserver-clusterrolebinding.yaml
+    kubectl apply -f node-cluster-role.yaml --kubeconfig=kubernetes-the-hard-way.kubeconfig
     kubectl apply -f node-cluster-rolebinding.yaml --kubeconfig=kubernetes-the-hard-way.kubeconfig
 ```
 #### 2.7 Bootstrap Kubelet Components

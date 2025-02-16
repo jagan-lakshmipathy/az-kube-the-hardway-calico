@@ -9,4 +9,6 @@ rules:
 - apiGroups: [""]
   resources: ["nodes/proxy"]
   verbs: ["get"]
-
+- apiGroups: [""]
+  resources: ["nodes/stats", "nodes/log", "nodes/metrics"]
+  verbs: ["get", "list", "watch"]
